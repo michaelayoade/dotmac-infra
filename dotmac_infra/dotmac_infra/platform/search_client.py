@@ -143,11 +143,13 @@ class SearchClient:
             ),
         }
 
-    async def setup_search_infrastructure(self, db: Session) -> bool:
+    async def setup_search_infrastructure(self, db: Optional[Session]) -> bool:
         """
-        Setup PostgreSQL search infrastructure
-        Creates extensions, indexes, and search functions
+        Setup PostgreSQL search infrastructure. Safe no-op without DB.
         """
+        if db is None:
+            logger.info("Search infra setup skipped: no DB session provided")
+            return True
         try:
             # Enable required PostgreSQL extensions
             await self._execute_sql(db, "CREATE EXTENSION IF NOT EXISTS pg_trgm;")
@@ -162,29 +164,24 @@ class SearchClient:
 
             logger.info("Search infrastructure setup completed")
             return True
-
         except Exception as e:
             logger.error(f"Failed to setup search infrastructure: {str(e)}")
             return False
 
     async def _create_search_index(self, db: Session, entity: SearchableEntity) -> None:
         """Create FTS and trigram indexes for entity"""
-
-        # Create tsvector column for full-text search
         tsvector_sql = f"""
         ALTER TABLE {entity.table_name} 
         ADD COLUMN IF NOT EXISTS search_vector tsvector;
         """
         await self._execute_sql(db, tsvector_sql)
 
-        # Create GIN index on tsvector
         gin_index_sql = f"""
         CREATE INDEX IF NOT EXISTS {entity.table_name}_search_vector_idx 
         ON {entity.table_name} USING GIN (search_vector);
         """
         await self._execute_sql(db, gin_index_sql)
 
-        # Create trigram indexes for fuzzy search
         for column in entity.content_columns:
             trigram_index_sql = f"""
             CREATE INDEX IF NOT EXISTS {entity.table_name}_{column}_trigram_idx 
@@ -192,7 +189,6 @@ class SearchClient:
             """
             await self._execute_sql(db, trigram_index_sql)
 
-        # Create trigger to update search_vector automatically
         content_columns_sql = " || ' ' || ".join(
             [f"NEW.{col}" for col in entity.content_columns]
         )
@@ -201,8 +197,7 @@ class SearchClient:
         RETURNS TRIGGER AS $$
         BEGIN
             NEW.search_vector := to_tsvector('english', 
-                COALESCE({content_columns_sql}, '')
-            );
+                COALESCE({content_columns_sql}, ''));
             RETURN NEW;
         END;
         $$ LANGUAGE plpgsql;
@@ -216,8 +211,6 @@ class SearchClient:
 
     async def _create_search_functions(self, db: Session) -> None:
         """Create helper functions for search"""
-
-        # Function for highlighted search results
         highlight_function = """
         CREATE OR REPLACE FUNCTION search_highlight(
             content TEXT, 
@@ -231,14 +224,24 @@ class SearchClient:
         """
         await self._execute_sql(db, highlight_function)
 
-    async def search(self, db: Session, search_query: SearchQuery) -> SearchResults:
+    async def search(self, db: Optional[Session], search_query: SearchQuery) -> SearchResults:
         """
-        Perform full-text search across entities
+        Perform full-text search across entities. Safe empty response when DB is absent.
         """
         start_time = datetime.now()
 
+        if db is None:
+            took_ms = int((datetime.now() - start_time).total_seconds() * 1000)
+            return SearchResults(
+                query=search_query.query,
+                total_count=0,
+                results=[],
+                took_ms=took_ms,
+                suggestions=[],
+            )
+
         # Build search query
-        query_parts = []
+        query_parts: List[str] = []
         params = {
             "tenant_id": self.tenant_id,
             "search_query": search_query.query,
@@ -246,7 +249,6 @@ class SearchClient:
             "offset": search_query.offset,
         }
 
-        # Determine which entities to search
         entities_to_search = search_query.entity_types or list(
             self.searchable_entities.keys()
         )
@@ -257,35 +259,33 @@ class SearchClient:
 
             entity = self.searchable_entities[entity_type]
 
-            # Build entity-specific query
+            title_col = (
+                entity.title_columns[0]
+                if entity.title_columns
+                else f"'{entity_type}'"
+            )
+            description_cols = " || ' ' || ".join(
+                [f"{col}" for col in entity.content_columns[:3]]
+            ) or "''"
+            metadata_cols = ", ".join(
+                [f"'{col}', {col}" for col in entity.metadata_columns]
+            ) or "'source','pg'"
+            tenant_condition = (
+                f"{entity.tenant_column} = :tenant_id AND"
+                if entity.tenant_column
+                else ""
+            )
+
             if search_query.fuzzy:
-                # Combine FTS and trigram search
                 similarity_cols = " + ".join(
                     [
                         f"similarity({col}, :search_query)"
                         for col in entity.content_columns[:3]
                     ]
-                )
-                title_col = (
-                    entity.title_columns[0]
-                    if entity.title_columns
-                    else f"'{entity_type}'"
-                )
-                description_cols = " || ' ' || ".join(
-                    [f"{col}" for col in entity.content_columns[:3]]
-                )
-                metadata_cols = ", ".join(
-                    [f"'{col}', {col}" for col in entity.metadata_columns]
-                )
-                tenant_condition = (
-                    f"{entity.tenant_column} = :tenant_id AND"
-                    if entity.tenant_column
-                    else ""
-                )
+                ) or "0"
                 trigram_conditions = " OR ".join(
                     [f"{col} % :search_query" for col in entity.content_columns]
-                )
-
+                ) or "FALSE"
                 entity_query = f"""
                 (
                     SELECT 
@@ -297,9 +297,7 @@ class SearchClient:
                         ) as score,
                         {title_col} as title,
                         COALESCE({description_cols}, '') as description,
-                        json_build_object(
-                            {metadata_cols}
-                        ) as metadata
+                        json_build_object({metadata_cols}) as metadata
                     FROM {entity.table_name}
                     WHERE 
                         {tenant_condition}
@@ -311,24 +309,6 @@ class SearchClient:
                 )
                 """
             else:
-                # FTS only
-                title_col = (
-                    entity.title_columns[0]
-                    if entity.title_columns
-                    else f"'{entity_type}'"
-                )
-                description_cols = " || ' ' || ".join(
-                    [f"{col}" for col in entity.content_columns[:3]]
-                )
-                metadata_cols = ", ".join(
-                    [f"'{col}', {col}" for col in entity.metadata_columns]
-                )
-                tenant_condition = (
-                    f"{entity.tenant_column} = :tenant_id AND"
-                    if entity.tenant_column
-                    else ""
-                )
-
                 entity_query = f"""
                 (
                     SELECT 
@@ -337,9 +317,7 @@ class SearchClient:
                         ts_rank(search_vector, plainto_tsquery('english', :search_query)) as score,
                         {title_col} as title,
                         COALESCE({description_cols}, '') as description,
-                        json_build_object(
-                            {metadata_cols}
-                        ) as metadata
+                        json_build_object({metadata_cols}) as metadata
                     FROM {entity.table_name}
                     WHERE 
                         {tenant_condition}
@@ -350,10 +328,10 @@ class SearchClient:
 
             query_parts.append(entity_query)
 
-        # Combine all entity queries
         if not query_parts:
+            took_ms = int((datetime.now() - start_time).total_seconds() * 1000)
             return SearchResults(
-                query=search_query.query, total_count=0, results=[], took_ms=0
+                query=search_query.query, total_count=0, results=[], took_ms=took_ms
             )
 
         full_query = f"""
@@ -366,36 +344,114 @@ class SearchClient:
         LIMIT :limit OFFSET :offset
         """
 
-        # Execute search
-        result = await self._execute_sql(db, full_query, params)
+        try:
+            result = await self._execute_sql(db, full_query, params)
+            rows = result.fetchall()
+            search_results: List[SearchResult] = []
+            for row in rows:
+                # Row may be RowMapping or tuple-like depending on driver
+                entity_type = getattr(row, "entity_type", row[0])
+                entity_id = str(getattr(row, "entity_id", row[1]))
+                score = float(getattr(row, "score", row[2]))
+                title = getattr(row, "title", row[3])
+                description = getattr(row, "description", row[4])
+                metadata = getattr(row, "metadata", row[5])
+                if not isinstance(metadata, dict):
+                    metadata = {}
 
-        # Convert to SearchResult objects
-        search_results = []
-        for row in result.fetchall():
-            search_results.append(
-                SearchResult(
-                    entity_type=row.entity_type,
-                    entity_id=row.entity_id,
-                    score=float(row.score),
-                    title=row.title,
-                    description=row.description,
-                    metadata=row.metadata if isinstance(row.metadata, dict) else {},
+                search_results.append(
+                    SearchResult(
+                        entity_type=entity_type,
+                        entity_id=entity_id,
+                        score=score,
+                        title=title,
+                        description=description,
+                        metadata=metadata,
+                    )
                 )
+
+            count_query = f"""
+            WITH search_results AS (
+                {" UNION ALL ".join(query_parts)}
+            )
+            SELECT COUNT(*) as total FROM search_results WHERE score > 0.1
+            """
+            count_result = await self._execute_sql(db, count_query, params)
+            total_row = count_result.fetchone()
+            total_count = int(getattr(total_row, "total", total_row[0])) if total_row else 0
+
+            suggestions: List[str] = []
+            if not search_results:
+                suggestions = await self._get_suggestions(db, search_query.query)
+
+            took_ms = int((datetime.now() - start_time).total_seconds() * 1000)
+            return SearchResults(
+                query=search_query.query,
+                total_count=total_count,
+                results=search_results,
+                took_ms=took_ms,
+                suggestions=suggestions,
+            )
+        except Exception as e:
+            logger.warning(f"search failed (returning empty): {e}")
+            took_ms = int((datetime.now() - start_time).total_seconds() * 1000)
+            return SearchResults(
+                query=search_query.query, total_count=0, results=[], took_ms=took_ms
             )
 
-        # Get total count
-        count_query = f"""
-        WITH search_results AS (
-            {" UNION ALL ".join(query_parts)}
-        )
-        SELECT COUNT(*) as total FROM search_results WHERE score > 0.1
-        """
-        count_result = await self._execute_sql(db, count_query, params)
-        total_count = count_result.fetchone().total
+    async def index_entity(
+        self, db: Optional[Session], entity_type: str, entity_id: str, data: Dict[str, Any]
+    ) -> bool:
+        """Index or reindex an entity. Safe no-op without DB."""
+        if db is None:
+            return True
+        try:
+            entity = self.searchable_entities.get(entity_type)
+            if not entity:
+                return False
+            sql = f"UPDATE {entity.table_name} SET updated_at = NOW() WHERE {entity.id_column} = :id"
+            await self._execute_sql(db, sql, {"id": entity_id})
+            return True
+        except Exception as e:
+            logger.warning(f"index_entity failed: {e}")
+            return False
 
-        # Generate suggestions if no results
-        suggestions = []
-        if not search_results:
-            suggestions = await self._get_suggestions(db, search_query.query)
+    async def _get_suggestions(self, db: Session, query: str) -> List[str]:
+        """Very simple suggestions implementation using trigram similarity on common columns."""
+        try:
+            suggestions: List[str] = []
+            for entity in self.searchable_entities.values():
+                if not entity.content_columns:
+                    continue
+                col = entity.content_columns[0]
+                sql = (
+                    f"SELECT DISTINCT {col} FROM {entity.table_name} "
+                    f"WHERE {col} % :q ORDER BY similarity({col}, :q) DESC LIMIT 3"
+                )
+                res = await self._execute_sql(db, sql, {"q": query})
+                for row in res.fetchall():
+                    value = row[0]
+                    if isinstance(value, str):
+                        suggestions.append(value)
+                if len(suggestions) >= 5:
+                    break
+            return suggestions[:5]
+        except Exception as e:
+            logger.debug(f"suggestions failed: {e}")
+            return []
 
-        end_time = datetime.now()
+    async def _execute_sql(self, db: Session, sql: str, params: Optional[Dict[str, Any]] = None):
+        """Helper to execute SQL and return a DBAPI-like result."""
+        return db.execute(text(sql), params or {})
+
+    def _build_filters_sql(self, filters: Dict[str, Any], entity: SearchableEntity) -> str:
+        """Build simple AND filters on metadata/content columns. Sanitized by SQLAlchemy params upstream."""
+        if not filters:
+            return ""
+        clauses: List[str] = []
+        for key in filters.keys():
+            if key in entity.metadata_columns or key in entity.content_columns:
+                clauses.append(f"{key} = :{key}")
+        if not clauses:
+            return ""
+        return " AND (" + " AND ".join(clauses) + ")"
