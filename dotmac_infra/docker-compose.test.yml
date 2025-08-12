@@ -1,0 +1,44 @@
+services:
+  dotmac-infra-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: dotmac-infra-test
+    volumes:
+      - .:/app
+      - /app/.pytest_cache
+      - /app/htmlcov
+      - /app/dist
+    environment:
+      - PYTHONPATH=/app
+      - PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
+      - COVERAGE_FILE=/app/.coverage
+    working_dir: /app
+    command: bash -lc "bash /app/run_tests.sh"
+
+  # Optional: Redis for integration tests
+  redis-test:
+    image: redis:7-alpine
+    container_name: dotmac-infra-redis-test
+    ports:
+      - "6380:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-test-data:/data
+
+  # Optional: PostgreSQL for integration tests  
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: dotmac-infra-postgres-test
+    environment:
+      POSTGRES_DB: dotmac_infra_test
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-test-data:/var/lib/postgresql/data
+
+volumes:
+  redis-test-data:
+  postgres-test-data:
