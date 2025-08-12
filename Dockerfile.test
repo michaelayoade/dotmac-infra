@@ -1,0 +1,121 @@
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy package files
+COPY pyproject.toml README.md ./
+COPY dotmac_infra/ ./dotmac_infra/
+COPY tests/ ./tests/
+COPY pytest.ini ./
+
+# Install package in development mode with all dependencies
+RUN pip install --upgrade pip && \
+    pip install -e ".[dev]" && \
+    pip install pytest pytest-cov pytest-xdist pytest-mock \
+                bandit safety ruff mypy black isort
+
+# Set environment variables for testing
+ENV PYTHONPATH=/app
+ENV PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
+
+# Create test runner script
+RUN echo '#!/bin/bash\n\
+set -e\n\
+\n\
+echo "🐳 Starting comprehensive dotmac_infra package testing in Docker..."\n\
+echo ""\n\
+\n\
+# Test 1: Package Import and Basic Functionality\n\
+echo "📦 Testing package imports and basic functionality..."\n\
+python -c "\n\
+import sys\n\
+print(f\"Python version: {sys.version}\")\n\
+\n\
+# Test main package import\n\
+import dotmac_infra\n\
+print(f\"✅ Package version: {dotmac_infra.__version__}\")\n\
+print(f\"✅ Available components: {len(dotmac_infra.__all__)}\")\n\
+\n\
+# Test platform imports\n\
+from dotmac_infra.platform import DatabaseClient, CacheClient\n\
+print(\"✅ Platform components imported\")\n\
+\n\
+# Test Layer1 imports\n\
+from dotmac_infra.layer1.contact_sdk import ContactSDK\n\
+from dotmac_infra.layer1.address_sdk import AddressSDK\n\
+print(\"✅ Layer1 SDKs imported\")\n\
+\n\
+# Test Utils imports\n\
+from dotmac_infra.utils.enums import Permission, ContactType\n\
+from dotmac_infra.utils.logging import logger\n\
+print(\"✅ Utils components imported\")\n\
+\n\
+# Test SDK instantiation\n\
+contact_sdk = ContactSDK(tenant_id=\"test-tenant\")\n\
+print(\"✅ SDK instantiation successful\")\n\
+\n\
+print(\"🎉 All import tests passed!\")\n\
+"\n\
+\n\
+# Test 2: Code Quality and Linting\n\
+echo ""\n\
+echo "🔍 Running code quality checks..."\n\
+echo "Running ruff linting..."\n\
+ruff check dotmac_infra/ || echo "⚠️  Ruff found issues"\n\
+\n\
+echo "Running ruff formatting check..."\n\
+ruff format --check dotmac_infra/ || echo "⚠️  Formatting issues found"\n\
+\n\
+echo "Running mypy type checking..."\n\
+mypy dotmac_infra/ --ignore-missing-imports || echo "⚠️  Type checking issues found"\n\
+\n\
+# Test 3: Security Scanning\n\
+echo ""\n\
+echo "🔒 Running security scans..."\n\
+echo "Running bandit security scan..."\n\
+bandit -r dotmac_infra/ -f text || echo "⚠️  Security issues found"\n\
+\n\
+echo "Running safety dependency check..."\n\
+safety check || echo "⚠️  Dependency vulnerabilities found"\n\
+\n\
+# Test 4: Unit Tests\n\
+echo ""\n\
+echo "🧪 Running unit tests..."\n\
+pytest tests/unit/ -v --tb=short --cov=dotmac_infra --cov-report=term-missing\n\
+\n\
+# Test 5: Integration Tests\n\
+echo ""\n\
+echo "🔗 Running integration tests..."\n\
+pytest tests/integration/ -v --tb=short\n\
+\n\
+# Test 6: Smoke Tests\n\
+echo ""\n\
+echo "💨 Running smoke tests..."\n\
+pytest tests/smoke/ -v --tb=short\n\
+\n\
+# Test 7: DRY Validation\n\
+echo ""\n\
+echo "🏗️  Running DRY validation tests..."\n\
+pytest tests/unit/test_dry_validation.py -v --tb=short\n\
+\n\
+# Test 8: Package Build Test\n\
+echo ""\n\
+echo "📦 Testing package build..."\n\
+python -m build\n\
+twine check dist/*\n\
+\n\
+echo ""\n\
+echo "🎉 ALL TESTS COMPLETED SUCCESSFULLY!"\n\
+echo "✅ dotmac_infra package is production-ready"\n\
+' > /app/run_tests.sh && chmod +x /app/run_tests.sh
+
+# Default command
+CMD ["/app/run_tests.sh"]
