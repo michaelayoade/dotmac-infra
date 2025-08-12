@@ -331,7 +331,7 @@ class AutomationEngineSDK(BaseOperationsSDK):
                 for key, value in trigger_data.items():
                     expression = expression.replace(f"${key}", str(value))
                 return eval(expression)  # Use proper evaluator in production
-            except:
+            except Exception:
                 return False
         elif condition_type == "custom":
             # Use custom evaluator

@@ -615,7 +615,7 @@ class WorkflowEngineSDK(BaseOperationsSDK):
             
             # Basic evaluation (unsafe - use proper evaluator in production)
             return eval(condition)
-        except:
+        except Exception:
             return False
     
     async def _check_step_dependencies(
