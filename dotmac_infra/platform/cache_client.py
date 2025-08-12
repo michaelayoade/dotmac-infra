@@ -3,7 +3,7 @@ Platform SDK Cache Client (Python)
 Provides caching operations with tenant isolation and observability
 """
 
-from typing import Optional, Any
+from typing import Dict, Optional, Any
 from datetime import datetime, timedelta
 import json
 
