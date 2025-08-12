@@ -1,0 +1,30 @@
+# CI-like test image for dotmac-infra SDKs
+FROM python:3.11-slim
+
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+# System deps for psycopg/psycopg2 and compilation
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    gcc \
+    libpq-dev \
+    git \
+  && rm -rf /var/lib/apt/lists/*
+
+# Pre-copy requirement files if present to leverage Docker cache
+COPY requirements.txt* /app/
+
+RUN if [ -f "/app/requirements.txt" ]; then pip install -r /app/requirements.txt; fi && \
+    pip install --upgrade pip setuptools wheel && \
+    pip install pytest pytest-cov mypy
+
+# Project code
+COPY . /app
+
+# Default command runs the provided test script; overridden by compose
+CMD ["bash", "-lc", "bash /app/run_tests.sh"]
