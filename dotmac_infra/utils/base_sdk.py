@@ -5,10 +5,9 @@ Provides common functionality and decorators for all SDKs
 
 import logging
 import functools
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Callable, Union
-from uuid import UUID, uuid4
-import json
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Callable
+from uuid import UUID
 
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -23,7 +22,7 @@ from dotmac_infra.platform.search_client import SearchClient
 
 # Enums
 from dotmac_infra.utils.enums import (
-    OperationType, EventType, Permission, ResourceType, AccessLevel
+    OperationType, EventType, Permission
 )
 
 logger = logging.getLogger(__name__)

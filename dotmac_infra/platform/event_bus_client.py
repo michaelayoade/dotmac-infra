@@ -5,7 +5,6 @@ Provides event publishing and subscription with tenant isolation
 
 from typing import Dict, List, Optional, Any, Callable
 from datetime import datetime
-import json
 import uuid
 import asyncio
 

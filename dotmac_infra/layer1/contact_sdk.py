@@ -3,14 +3,13 @@ Layer 1 Contact SDK - Contract-first implementation using BaseSDK and decorators
 Demonstrates DRY principles, compositional architecture, and cross-cutting concerns
 """
 
-from typing import Dict, List, Optional, Any
-from uuid import UUID, uuid4
+from typing import Dict, Optional, Any
+from uuid import uuid4
 from datetime import datetime
 from sqlalchemy.orm import Session
 
 from dotmac_infra.utils.base_sdk import (
-    BaseSDK, OperationContext, SecurityContext,
-    require_permission, audit_operation, emit_event, cache_result, search_indexable, trace_operation
+    BaseSDK, OperationContext, require_permission, audit_operation, emit_event, cache_result, search_indexable, trace_operation
 )
 from dotmac_infra.utils.enums import (
     ContactType, ContactRole, ContactStatus, Permission, 

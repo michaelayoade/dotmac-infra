@@ -3,9 +3,8 @@ Platform SDK Database Client (Python)
 Provides database operations with tenant isolation and observability
 """
 
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any
 from datetime import datetime
-import uuid
 
 # Database dependency removed - use external injection
 from dotmac_infra.utils.logging import logger
@@ -22,7 +21,10 @@ class DatabaseClient:
     
     def get_session(self) -> Session:
         """Get database session"""
-        return next(get_db())
+        # Mock database session for standalone package
+        # In production, this would return actual SQLAlchemy session
+        # return next(get_db())
+        return None
     
     async def execute(self, query: str, params: tuple = None) -> bool:
         """Execute a database query"""

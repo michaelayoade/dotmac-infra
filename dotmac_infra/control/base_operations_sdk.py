@@ -16,7 +16,7 @@ import asyncio
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any
 from uuid import uuid4
 from enum import Enum
 
@@ -26,7 +26,7 @@ from ..platform.cache_sdk import CacheSDK
 from ..platform.event_bus_sdk import EventBusSDK
 from ..platform.observability_sdk import ObservabilitySDK
 from ..data.queue_sdk import QueueSDK
-from ...core.enums import Permission, ResourceType, OperationType, EventType
+from ...core.enums import Permission, ResourceType
 
 logger = logging.getLogger(__name__)
 

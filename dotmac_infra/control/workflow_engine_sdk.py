@@ -17,15 +17,15 @@ Features:
 import asyncio
 import json
 import logging
-from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Optional, Any, Callable, Union
+from datetime import datetime, timezone
+from typing import Dict, List, Optional, Any, Callable
 from uuid import uuid4
 from enum import Enum
 
-from .base_operations_sdk import BaseOperationsSDK, OperationStatus, OperationPriority, OperationResult
+from .base_operations_sdk import BaseOperationsSDK, OperationPriority
 from .job_queue_sdk import JobQueueSDK, JobType
 from .task_scheduler_sdk import TaskSchedulerSDK
-from ..base_sdk import OperationContext, SecurityContext
+from ..base_sdk import SecurityContext
 from ...core.enums import Permission
 
 logger = logging.getLogger(__name__)
@@ -505,7 +505,7 @@ class WorkflowEngineSDK(BaseOperationsSDK):
         step_order = workflow_data["step_order"]
         
         # Build dependency graph
-        dependency_graph = self._build_dependency_graph(steps)
+        self._build_dependency_graph(steps)
         
         # Execute steps in dependency order with parallelization
         executed_steps = set()

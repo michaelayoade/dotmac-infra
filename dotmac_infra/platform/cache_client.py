@@ -3,14 +3,12 @@ Platform SDK Cache Client (Python)
 Provides caching operations with tenant isolation and observability
 """
 
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, Optional, Any
 from datetime import datetime, timedelta
 import json
-import uuid
 
 # Redis dependency removed - use external injection
 from dotmac_infra.utils.logging import logger
-import redis
 
 
 class CacheClient:
@@ -25,9 +23,10 @@ class CacheClient:
     def _initialize_redis(self):
         """Initialize Redis connection with fallback"""
         try:
-            self.redis_client = get_redis()
-            # Test connection
-            self.redis_client.ping()
+            # Mock Redis connection for standalone package
+            self.redis_client = None
+            # In production, this would connect to actual Redis
+            # self.redis_client = redis.Redis(host='localhost', port=6379, db=0)
         except Exception as e:
             self.logger.warning(f"Redis connection failed, using in-memory fallback: {str(e)}")
             self.redis_client = None

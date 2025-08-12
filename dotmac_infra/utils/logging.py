@@ -3,7 +3,6 @@ Internal logging utilities for dotmac_infra package
 """
 import logging
 import structlog
-from typing import Any, Dict, Optional
 
 
 def get_logger(name: str) -> structlog.stdlib.BoundLogger:

@@ -5,14 +5,11 @@ No external dependencies - pure PostgreSQL solution
 """
 
 import logging
-from datetime import datetime, timezone
-from typing import List, Dict, Any, Optional, Union
-from uuid import UUID
-import json
+from datetime import datetime
+from typing import List, Dict, Any, Optional
 
-from sqlalchemy import text, and_, or_
+from sqlalchemy import text
 from sqlalchemy.orm import Session
-from sqlalchemy.dialects.postgresql import TSVECTOR
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)

@@ -5,8 +5,8 @@ Provides easy-to-use decorators for adding observability to API endpoints
 
 import time
 import functools
-from typing import Callable, Any, Dict, Optional
-from fastapi import Request, HTTPException
+from typing import Callable, Any, Dict
+from fastapi import Request
 
 from .manager import get_observability_manager
 

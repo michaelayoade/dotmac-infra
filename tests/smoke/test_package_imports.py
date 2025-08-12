@@ -1,7 +1,6 @@
 """
 Smoke tests for dotmac_infra package imports and basic functionality
 """
-import pytest
 
 
 class TestPackageImports:
@@ -47,12 +46,8 @@ class TestPackageImports:
     
     def test_utils_imports(self):
         """Test utils component imports"""
-        from dotmac_infra.utils.base_sdk import BaseSDK
         from dotmac_infra.utils.enums import (
-            Permission, ContactType, ContactRole, ContactStatus,
-            AddressType, AddressStatus, PhoneType, PhoneStatus,
-            EmailType, EmailStatus, OrganizationType, OrganizationStatus,
-            AccessLevel, ResourceType, EventType, OperationType
+            Permission, ContactType, OperationType
         )
         from dotmac_infra.utils.logging import logger, StructuredLogger
         

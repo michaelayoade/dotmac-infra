@@ -1,7 +1,6 @@
 """
 Unit tests for dotmac_infra enums
 """
-import pytest
 from dotmac_infra.utils.enums import (
     Permission, ContactType, ContactRole, ContactStatus,
     AddressType, AddressStatus, PhoneType, PhoneStatus,

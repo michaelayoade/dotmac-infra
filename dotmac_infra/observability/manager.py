@@ -4,7 +4,6 @@ Centralized management of observability, monitoring, and alerting SDKs
 """
 
 import os
-import asyncio
 from typing import Optional, Dict, Any
 from contextlib import asynccontextmanager
 
