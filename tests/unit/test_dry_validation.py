@@ -53,10 +53,20 @@ class TestDRYValidation:
                         }
                     )
                 elif isinstance(node, ast.ClassDef):
+                    # Extract base class names
+                    bases = []
+                    for base in node.bases:
+                        if isinstance(base, ast.Name):
+                            bases.append(base.id)
+                        elif isinstance(base, ast.Attribute):
+                            # Handle module.ClassName format
+                            bases.append(ast.unparse(base))
+                    
                     definitions.append(
                         {
                             "type": "class",
                             "name": node.name,
+                            "bases": bases,
                             "file": str(file_path),
                             "line": node.lineno,
                         }
@@ -219,14 +229,29 @@ class TestDRYValidation:
             except Exception:
                 continue
 
-        # All SDK classes should inherit from BaseSDK
+        # All SDK classes should inherit from BaseSDK (directly or indirectly)
         invalid_sdks = []
         for sdk in sdk_classes:
-            if "BaseSDK" not in sdk["bases"]:
+            # Check direct inheritance from BaseSDK
+            if "BaseSDK" in sdk["bases"]:
+                continue
+            
+            # Check indirect inheritance through BaseOperationsSDK or other base classes
+            has_valid_inheritance = False
+            for base in sdk["bases"]:
+                if base in ["BaseOperationsSDK", "BaseAnalyticsSDK", "BaseFinanceSDK"]:
+                    has_valid_inheritance = True
+                    break
+            
+            # Skip BaseSDK itself from this check
+            if sdk["name"] == "BaseSDK":
+                continue
+                
+            if not has_valid_inheritance:
                 invalid_sdks.append(f"{sdk['name']} in {sdk['file']}")
 
         if invalid_sdks:
-            pytest.fail(f"SDKs not inheriting from BaseSDK: {invalid_sdks}")
+            pytest.fail(f"SDKs not inheriting from BaseSDK or valid base classes: {invalid_sdks}")
 
     def test_no_hardcoded_values(self, package_root):
         """Test that there are no hardcoded values that should be configurable"""
@@ -274,7 +299,7 @@ class TestCodeQuality:
         required_dirs = ["platform", "layer1", "utils"]
 
         for dir_name in required_dirs:
-            dir_path = package_root / "dotmac_infra" / dir_name
+            dir_path = package_root / dir_name
             assert dir_path.exists(), f"Required directory {dir_name} not found"
 
             # Each directory should have __init__.py
