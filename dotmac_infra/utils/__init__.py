@@ -20,14 +20,14 @@ from .logging import logger, StructuredLogger
 
 __all__ = [
     "BaseSDK",
-    "OperationContext", 
+    "OperationContext",
     "SecurityContext",
     "Permission",
     "UserRole",
     "ContactType",
     "ContactStatus",
     "AddressType",
-    "PhoneType", 
+    "PhoneType",
     "EmailType",
     "OrganizationType",
     "OperationType",
