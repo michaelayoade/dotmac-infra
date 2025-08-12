@@ -9,14 +9,14 @@ from .decorators import (
     with_observability,
     track_performance,
     monitor_health,
-    alert_on_failure
+    alert_on_failure,
 )
 
 __all__ = [
-    'ObservabilityMiddleware',
-    'ObservabilityManager', 
-    'with_observability',
-    'track_performance',
-    'monitor_health',
-    'alert_on_failure'
+    "ObservabilityMiddleware",
+    "ObservabilityManager",
+    "with_observability",
+    "track_performance",
+    "monitor_health",
+    "alert_on_failure",
 ]

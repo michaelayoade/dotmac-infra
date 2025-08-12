@@ -19,6 +19,7 @@ try:
         ObservabilityClient,
         FileStorageClient,
     )
+
     _platform_available = True
 except ImportError:
     _platform_available = False
@@ -30,6 +31,7 @@ try:
     from .layer1.phone_sdk import PhoneSDK  # noqa: F401
     from .layer1.email_sdk import EmailSDK  # noqa: F401
     from .layer1.organization_sdk import OrganizationSDK  # noqa: F401
+
     _layer1_available = True
 except ImportError:
     _layer1_available = False
@@ -39,6 +41,7 @@ try:
     from .utils.base_sdk import BaseSDK  # noqa: F401
     from .utils.enums import Permission, ContactType, AddressType, PhoneType, EmailType  # noqa: F401
     from .utils.logging import logger, StructuredLogger  # noqa: F401
+
     _utils_available = True
 except ImportError:
     _utils_available = False
@@ -46,43 +49,61 @@ except ImportError:
 # Package exports - using strings to avoid unused import warnings
 __all__ = [
     # Platform components
-    'DatabaseClient', 'CacheClient', 'EventBusClient', 
-    'ObservabilityClient', 'FileStorageClient', 'SearchClient',
-    
-    # Layer 1 components  
-    'ContactSDK', 'AddressSDK', 'PhoneSDK', 'EmailSDK', 'OrganizationSDK',
-    
+    "DatabaseClient",
+    "CacheClient",
+    "EventBusClient",
+    "ObservabilityClient",
+    "FileStorageClient",
+    "SearchClient",
+    # Layer 1 components
+    "ContactSDK",
+    "AddressSDK",
+    "PhoneSDK",
+    "EmailSDK",
+    "OrganizationSDK",
     # Utils
-    'BaseSDK', 'Permission', 'ContactType', 'AddressType', 'PhoneType', 'EmailType',
-    'logger', 'StructuredLogger'
+    "BaseSDK",
+    "Permission",
+    "ContactType",
+    "AddressType",
+    "PhoneType",
+    "EmailType",
+    "logger",
+    "StructuredLogger",
 ]
 
 if _platform_available:
-    __all__.extend([
-        "DatabaseClient",
-        "CacheClient", 
-        "EventBusClient",
-        "ObservabilityClient",
-        "FileStorageClient",
-    ])
+    __all__.extend(
+        [
+            "DatabaseClient",
+            "CacheClient",
+            "EventBusClient",
+            "ObservabilityClient",
+            "FileStorageClient",
+        ]
+    )
 
 if _layer1_available:
-    __all__.extend([
-        "ContactSDK",
-        "AddressSDK",
-        "PhoneSDK", 
-        "EmailSDK",
-        "OrganizationSDK",
-    ])
+    __all__.extend(
+        [
+            "ContactSDK",
+            "AddressSDK",
+            "PhoneSDK",
+            "EmailSDK",
+            "OrganizationSDK",
+        ]
+    )
 
 if _utils_available:
-    __all__.extend([
-        "BaseSDK",
-        "Permission",
-        "ContactType",
-        "AddressType",
-        "PhoneType",
-        "EmailType",
-        "logger",
-        "StructuredLogger",
-    ])
+    __all__.extend(
+        [
+            "BaseSDK",
+            "Permission",
+            "ContactType",
+            "AddressType",
+            "PhoneType",
+            "EmailType",
+            "logger",
+            "StructuredLogger",
+        ]
+    )

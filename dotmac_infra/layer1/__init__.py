@@ -9,10 +9,4 @@ from .phone_sdk import PhoneSDK
 from .email_sdk import EmailSDK
 from .organization_sdk import OrganizationSDK
 
-__all__ = [
-    "ContactSDK",
-    "AddressSDK", 
-    "PhoneSDK",
-    "EmailSDK",
-    "OrganizationSDK"
-]
+__all__ = ["ContactSDK", "AddressSDK", "PhoneSDK", "EmailSDK", "OrganizationSDK"]

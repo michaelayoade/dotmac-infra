@@ -1,41 +1,43 @@
 """
 Internal enums for dotmac_infra package
 """
+
 from enum import Enum
 
 
 class Permission(str, Enum):
     """Permission enumeration for RBAC system"""
+
     # Contact permissions
     CONTACT_CREATE = "contact.create"
     CONTACT_READ = "contact.read"
     CONTACT_UPDATE = "contact.update"
     CONTACT_DELETE = "contact.delete"
-    
+
     # Address permissions
     ADDRESS_CREATE = "address.create"
     ADDRESS_READ = "address.read"
     ADDRESS_UPDATE = "address.update"
     ADDRESS_DELETE = "address.delete"
-    
+
     # Phone permissions
     PHONE_CREATE = "phone.create"
     PHONE_READ = "phone.read"
     PHONE_UPDATE = "phone.update"
     PHONE_DELETE = "phone.delete"
-    
+
     # Email permissions
     EMAIL_CREATE = "email.create"
     EMAIL_READ = "email.read"
     EMAIL_UPDATE = "email.update"
     EMAIL_DELETE = "email.delete"
-    
+
     # Organization permissions
     ORGANIZATION_CREATE = "organization.create"
     ORGANIZATION_READ = "organization.read"
     ORGANIZATION_UPDATE = "organization.update"
     ORGANIZATION_DELETE = "organization.delete"
-    
+
     # Platform permissions
     PLATFORM_READ = "platform.read"
     PLATFORM_WRITE = "platform.write"
@@ -44,6 +46,7 @@ class Permission(str, Enum):
 
 class ContactType(str, Enum):
     """Contact type enumeration"""
+
     INDIVIDUAL = "individual"
     BUSINESS = "business"
     ORGANIZATION = "organization"
@@ -51,6 +54,7 @@ class ContactType(str, Enum):
 
 class ContactRole(str, Enum):
     """Contact role enumeration for business relationships"""
+
     PRIMARY = "primary"
     SECONDARY = "secondary"
     BILLING = "billing"
@@ -63,6 +67,7 @@ class ContactRole(str, Enum):
 
 class ContactStatus(str, Enum):
     """Contact status enumeration"""
+
     ACTIVE = "active"
     INACTIVE = "inactive"
     PENDING = "pending"
@@ -74,6 +79,7 @@ class ContactStatus(str, Enum):
 
 class AddressType(str, Enum):
     """Address type enumeration"""
+
     HOME = "home"
     WORK = "work"
     BILLING = "billing"
@@ -83,6 +89,7 @@ class AddressType(str, Enum):
 
 class AddressStatus(str, Enum):
     """Address status enumeration"""
+
     ACTIVE = "active"
     INACTIVE = "inactive"
     PENDING = "pending"
@@ -93,6 +100,7 @@ class AddressStatus(str, Enum):
 
 class PhoneType(str, Enum):
     """Phone type enumeration"""
+
     MOBILE = "mobile"
     HOME = "home"
     WORK = "work"
@@ -102,6 +110,7 @@ class PhoneType(str, Enum):
 
 class PhoneStatus(str, Enum):
     """Phone status enumeration"""
+
     ACTIVE = "active"
     INACTIVE = "inactive"
     PENDING = "pending"
@@ -112,6 +121,7 @@ class PhoneStatus(str, Enum):
 
 class EmailType(str, Enum):
     """Email type enumeration"""
+
     PERSONAL = "personal"
     WORK = "work"
     BILLING = "billing"
@@ -121,6 +131,7 @@ class EmailType(str, Enum):
 
 class EmailStatus(str, Enum):
     """Email status enumeration"""
+
     ACTIVE = "active"
     INACTIVE = "inactive"
     PENDING = "pending"
@@ -132,6 +143,7 @@ class EmailStatus(str, Enum):
 
 class OrganizationType(str, Enum):
     """Organization type enumeration"""
+
     CORPORATION = "corporation"
     LLC = "llc"
     PARTNERSHIP = "partnership"
@@ -143,6 +155,7 @@ class OrganizationType(str, Enum):
 
 class OrganizationStatus(str, Enum):
     """Organization status enumeration"""
+
     ACTIVE = "active"
     INACTIVE = "inactive"
     PENDING = "pending"
@@ -154,6 +167,7 @@ class OrganizationStatus(str, Enum):
 
 class Status(str, Enum):
     """Generic status enumeration"""
+
     ACTIVE = "active"
     INACTIVE = "inactive"
     PENDING = "pending"
@@ -163,6 +177,7 @@ class Status(str, Enum):
 
 class Priority(str, Enum):
     """Priority enumeration"""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -171,6 +186,7 @@ class Priority(str, Enum):
 
 class LogLevel(str, Enum):
     """Log level enumeration"""
+
     DEBUG = "debug"
     INFO = "info"
     WARNING = "warning"
@@ -180,6 +196,7 @@ class LogLevel(str, Enum):
 
 class OperationType(str, Enum):
     """Operation type enumeration for audit and tracking"""
+
     CREATE = "create"
     READ = "read"
     UPDATE = "update"
@@ -193,6 +210,7 @@ class OperationType(str, Enum):
 
 class EventType(str, Enum):
     """Event type enumeration for event bus and messaging"""
+
     ENTITY_CREATED = "entity.created"
     ENTITY_UPDATED = "entity.updated"
     ENTITY_DELETED = "entity.deleted"
@@ -205,6 +223,7 @@ class EventType(str, Enum):
 
 class ResourceType(str, Enum):
     """Resource type enumeration for RBAC and authorization"""
+
     CONTACT = "contact"
     ADDRESS = "address"
     PHONE = "phone"
@@ -219,6 +238,7 @@ class ResourceType(str, Enum):
 
 class AccessLevel(str, Enum):
     """Access level enumeration for security and permissions"""
+
     PUBLIC = "public"
     INTERNAL = "internal"
     CONFIDENTIAL = "confidential"
@@ -228,6 +248,7 @@ class AccessLevel(str, Enum):
 
 class ValidationLevel(str, Enum):
     """Validation level enumeration for data validation"""
+
     BASIC = "basic"
     STANDARD = "standard"
     STRICT = "strict"
@@ -236,6 +257,7 @@ class ValidationLevel(str, Enum):
 
 class CacheStrategy(str, Enum):
     """Cache strategy enumeration for caching behavior"""
+
     NO_CACHE = "no_cache"
     SHORT_TERM = "short_term"
     MEDIUM_TERM = "medium_term"
